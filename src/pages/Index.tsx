@@ -79,7 +79,7 @@ const Index = () => {
         {/* Note d'information */}
         <div className="text-center">
           <Badge variant="outline" className="text-xs">
-            Test postMessage - Word → Webapp
+            VERSION LOCAL
           </Badge>
         </div>
       </div>
