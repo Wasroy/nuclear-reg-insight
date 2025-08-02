@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,10 +8,7 @@ import { RegulatoryResults } from "@/components/RegulatoryResults";
 import { useRegulatoryAnalysis } from "@/hooks/useRegulatoryAnalysis";
 
 const Index = () => {
-  // Simulation du texte sélectionné dans Word - sera remplacé par Office.js
-  const [selectedText] = useState(
-    "Les systèmes de sûreté nucléaire doivent être conçus selon le principe de défense en profondeur, avec des barrières multiples et indépendantes pour prévenir la libération de matières radioactives."
-  );
+  const [selectedText, setSelectedText] = useState("");
 
   const {
     isAnalyzing,
@@ -21,10 +18,24 @@ const Index = () => {
     clearResults
   } = useRegulatoryAnalysis();
 
-  const handleAnalyze = () => {
-    if (selectedText.trim()) {
-      analyzeText(selectedText);
-    }
+  // Écouter les messages depuis Word
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === "texte-selectionne") {
+        const text = event.data.texte;
+        setSelectedText(text);
+        if (text.trim()) {
+          analyzeText(text);
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [analyzeText]);
+
+  const handleRequestText = () => {
+    window.parent.postMessage({ type: "demander-texte" }, "*");
   };
 
   return (
@@ -57,8 +68,8 @@ const Index = () => {
 
         {/* Bouton d'analyse */}
         <Button
-          onClick={handleAnalyze}
-          disabled={!selectedText.trim() || isAnalyzing}
+          onClick={handleRequestText}
+          disabled={isAnalyzing}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3"
           size="lg"
         >
